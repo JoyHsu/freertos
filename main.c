@@ -228,7 +228,7 @@ void Shell(void *pvParameters)
 				}break;
 			case Check:
 				{
-				int i,j,k;
+					int i,j,k;
 					for(i = 0 ; i < CMD_NUM ; i++)
 					{
 						k=0;
@@ -255,37 +255,39 @@ void Shell(void *pvParameters)
 				}break;
 			case Echo:
 				{
-				curr_char = 0;
-				int i;
-				for( i=5 ; i < curr_ins ; i++)
-					msg.str[curr_char++] = ins[i];
-				msg.str[curr_char++]='\0';
-				strprintf(msg.str);
-				strprintf(next_line);
-				State = Wait;
+					curr_char = 0;
+					int i;
+					for( i=5 ; i < curr_ins ; i++)
+					{
+						msg.str[curr_char++] = ins[i];
+						msg.str[curr_char++]='\0';
+						strprintf(msg.str);
+						strprintf(next_line);
+					}
+					State = Wait;
 				}break;
 			case Hello:
 				{
-				strprintf("You are a cool guy.");
-				strprintf(next_line);
-				State = Wait;
+					strprintf("You are a cool guy.");
+					strprintf(next_line);
+					State = Wait;
 				}break;
 			case Help:
 				{
-				int i;
-				for ( i=0 ; i < Help ; i++)
-				{
-				strprintf(cmd_data[i].name);
-				strprintf(cmd_data[i].function);
-				strprintf(next_line);
-				}
-				State = Wait;
+					int i;
+					for ( i=0 ; i < Help ; i++)
+					{
+						strprintf(cmd_data[i].name);
+						strprintf(cmd_data[i].function);
+						strprintf(next_line);
+					}
+					State = Wait;
 				}break;
 			case Error:
 				{
-				strprintf("No server");
-				strprintf(next_line);
-				State = Wait;
+					strprintf("No server");
+					strprintf(next_line);
+					State = Wait;
 				}break;			
 		}	
 	}
