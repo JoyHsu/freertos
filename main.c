@@ -78,6 +78,12 @@ void USART2_IRQHandler()
 	}
 }
 
+void strprintf(char *instr)
+{
+	while (!xQueueSendToBack(serial_str_queue, instr,
+		                       		portMAX_DELAY));
+}
+
 void send_byte(char ch)
 {
 	/* Wait until the RS232 port can receive another byte (this semaphore
@@ -183,8 +189,8 @@ void Shell(void *pvParameters)
 		{
 			case Wait:
 				{
-					while (!xQueueSendToBack(serial_str_queue, &JoyShell,
-		                         portMAX_DELAY));
+
+					strprintf("JoyShell>>");
 					curr_ins =0;
 					
 					while(State==Wait)
@@ -216,9 +222,8 @@ void Shell(void *pvParameters)
 							msg.str[curr_char++] = ch;
 							msg.str[curr_char++]='\0';
 							}
-
-						while (!xQueueSendToBack(serial_str_queue, &msg,
-		                         	portMAX_DELAY));
+						strprintf(msg.str);
+						
 					}
 				}break;
 			case Check:
@@ -245,8 +250,8 @@ void Shell(void *pvParameters)
 					}
 					if(State == Check)
 						State=Error;
-					while (!xQueueSendToBack(serial_str_queue, &next_line,
-		                       		portMAX_DELAY));					
+					strprintf(next_line);
+										
 				}break;
 			case Echo:
 				{
@@ -255,19 +260,14 @@ void Shell(void *pvParameters)
 				for( i=5 ; i < curr_ins ; i++)
 					msg.str[curr_char++] = ins[i];
 				msg.str[curr_char++]='\0';
-				while (!xQueueSendToBack(serial_str_queue, &msg,
-		                         	portMAX_DELAY));
-				while (!xQueueSendToBack(serial_str_queue, &next_line,
-		                         	portMAX_DELAY));
+				strprintf(msg.str);
+				strprintf(next_line);
 				State = Wait;
 				}break;
 			case Hello:
 				{
-				char hello[]="You are a cool guy.";
-				while (!xQueueSendToBack(serial_str_queue, &hello,
-		                	     portMAX_DELAY));
-				while (!xQueueSendToBack(serial_str_queue, &next_line,
-		                	     portMAX_DELAY));
+				strprintf("You are a cool guy.");
+				strprintf(next_line);
 				State = Wait;
 				}break;
 			case Help:
@@ -275,22 +275,16 @@ void Shell(void *pvParameters)
 				int i;
 				for ( i=0 ; i < Help ; i++)
 				{
-					while (!xQueueSendToBack(serial_str_queue, &cmd_data[i].name,
-		                       portMAX_DELAY));
-					while (!xQueueSendToBack(serial_str_queue, &cmd_data[i].function,
-		                       portMAX_DELAY));
-					while (!xQueueSendToBack(serial_str_queue, &next_line,
-		                       portMAX_DELAY));
+				strprintf(cmd_data[i].name);
+				strprintf(cmd_data[i].function);
+				strprintf(next_line);
 				}
 				State = Wait;
 				}break;
 			case Error:
 				{
-				char No_server[]="No server";
-				while (!xQueueSendToBack(serial_str_queue, &No_server,
-		                	     portMAX_DELAY));
-				while (!xQueueSendToBack(serial_str_queue, &next_line,
-		                	     portMAX_DELAY));
+				strprintf("No server");
+				strprintf(next_line);
 				State = Wait;
 				}break;			
 		}	
