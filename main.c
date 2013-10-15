@@ -12,6 +12,12 @@
 #include "filesystem.h"
 #include "fio.h"
 
+/* Shell parameter definition */
+#define MAX_cmdname 10
+#define MAX_function 50
+#define MAX_inslength 100
+#define BACKSPACE 127
+
 extern const char _sromfs;
 
 static void setup_hardware();
@@ -133,7 +139,165 @@ void read_romfs_task(void *pvParameters)
 	while (1);
 }
 
+void Shell(void *pvParameters)
+{
+	serial_str_msg msg;
+	char ch;
+	int curr_char = 0;
+	int curr_ins = 0;
+	char ins[MAX_inslength];
+	char JoyShell[]="JoyShell>>";
+	char next_line[3] = {'\n','\r','\0'};
 
+	enum{
+		
+		Echo= 0, //Excute Echo command
+		Hello,	 //Excute Hello command
+		Ps,	 //Excute help command
+		Help,	 //Excute ps command
+		CMD_NUM,
+		Wait ,//Wait command that be inserted
+		Check,	 //Excute Check command
+		Error
+	}State;
+	
+	State = Wait;
+
+
+	typedef struct {
+		char name[MAX_cmdname + 1];
+		char function[MAX_function + 1];
+		int length;
+		}Cmd_entry;
+	
+	const Cmd_entry cmd_data[CMD_NUM] = {
+		[Echo] = {.name = "echo ", .function = "Show words that you enter a moment ago.", .length = 5},
+		[Hello] = {.name = "hello ", .function = "Show words that you want to listen.", .length = 5},
+		[Ps] = {.name = "ps ", .function = "Show runing process.", .length = 2},
+		[Help] = {.name = "help ", .function = "Show commands that you can use.", .length = 4}
+		};
+
+	while(1)
+	{
+		switch(State)
+		{
+			case Wait:
+				{
+					while (!xQueueSendToBack(serial_str_queue, &JoyShell,
+		                         portMAX_DELAY));
+					curr_ins =0;
+					
+					while(State==Wait)
+					{
+						curr_char = 0;
+						ch = receive_byte();
+						if((ch==BACKSPACE)&&(curr_ins>0))//Backspace 
+							{
+							msg.str[curr_char++]='\b';
+							msg.str[curr_char++]=' ';
+							msg.str[curr_char++]='\b';
+							msg.str[curr_char++]='\0';
+							curr_ins--;
+							}
+						else if((ch==BACKSPACE)&&(curr_ins<=0))//It is limit(at first), so can not to do backspace 
+							{
+							msg.str[curr_char++]=' ';
+							msg.str[curr_char++]='\b';
+							msg.str[curr_char++]='\0';
+							}
+						else if(ch=='\r')//Enter
+							{
+							State=Check;
+							msg.str[curr_char++]='\0';
+							}
+						else//Universal word
+							{
+							ins[curr_ins++]=ch;
+							msg.str[curr_char++] = ch;
+							msg.str[curr_char++]='\0';
+							}
+
+						while (!xQueueSendToBack(serial_str_queue, &msg,
+		                         	portMAX_DELAY));
+					}
+				}break;
+			case Check:
+				{
+				int i,j,k;
+					for(i = 0 ; i < CMD_NUM ; i++)
+					{
+						k=0;
+						for(j = 0; j < cmd_data[i].length ; j++)
+						{
+							if( ins[j] == cmd_data[i].name[j] )
+								k++;
+							
+							if( k >= cmd_data[i].length)
+							{
+								State=(i);
+								break;
+							}
+							
+						}
+
+						if(State != Check)
+							break;
+					}
+					if(State == Check)
+						State=Error;
+					while (!xQueueSendToBack(serial_str_queue, &next_line,
+		                       		portMAX_DELAY));					
+				}break;
+			case Echo:
+				{
+				curr_char = 0;
+				int i;
+				for( i=5 ; i < curr_ins ; i++)
+					msg.str[curr_char++] = ins[i];
+				msg.str[curr_char++]='\0';
+				while (!xQueueSendToBack(serial_str_queue, &msg,
+		                         	portMAX_DELAY));
+				while (!xQueueSendToBack(serial_str_queue, &next_line,
+		                         	portMAX_DELAY));
+				State = Wait;
+				}break;
+			case Hello:
+				{
+				char hello[]="You are a cool guy.";
+				while (!xQueueSendToBack(serial_str_queue, &hello,
+		                	     portMAX_DELAY));
+				while (!xQueueSendToBack(serial_str_queue, &next_line,
+		                	     portMAX_DELAY));
+				State = Wait;
+				}break;
+			case Help:
+				{
+				int i;
+				for ( i=0 ; i < Help ; i++)
+				{
+					while (!xQueueSendToBack(serial_str_queue, &cmd_data[i].name,
+		                       portMAX_DELAY));
+					while (!xQueueSendToBack(serial_str_queue, &cmd_data[i].function,
+		                       portMAX_DELAY));
+					while (!xQueueSendToBack(serial_str_queue, &next_line,
+		                       portMAX_DELAY));
+				}
+				State = Wait;
+				}break;
+			case Error:
+				{
+				char No_server[]="No server";
+				while (!xQueueSendToBack(serial_str_queue, &No_server,
+		                	     portMAX_DELAY));
+				while (!xQueueSendToBack(serial_str_queue, &next_line,
+		                	     portMAX_DELAY));
+				State = Wait;
+				}break;			
+		}	
+	}
+
+	
+}
 
 int main()
 {
@@ -167,7 +331,12 @@ int main()
 	xTaskCreate(rs232_xmit_msg_task,
 	            (signed portCHAR *) "Serial Xmit Str",
 	            512 /* stack size */, NULL, tskIDLE_PRIORITY + 2, NULL);
-
+	
+	/* Create a task to realize shell function. */
+	xTaskCreate(Shell,
+	            (signed portCHAR *) "Shell",
+	            512 /* stack size */, NULL,
+	            tskIDLE_PRIORITY + 5, NULL);
 
 	/* Start running the tasks. */
 	vTaskStartScheduler();
