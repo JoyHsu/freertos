@@ -17,6 +17,7 @@
 #define MAX_function 50
 #define MAX_inslength 100
 #define BACKSPACE 127
+#define His_num 5
 
 extern const char _sromfs;
 
@@ -151,7 +152,9 @@ void Shell(void *pvParameters)
 	char ch;
 	int curr_char = 0;
 	int curr_ins = 0;
-	char ins[MAX_inslength];
+	int space_count = 0;
+	int His_ins = His_num;
+	char ins[His_num][MAX_inslength] = {NULL};
 	char JoyShell[]="JoyShell>>";
 	char next_line[3] = {'\n','\r','\0'};
 
@@ -160,6 +163,7 @@ void Shell(void *pvParameters)
 		Echo= 0, //Excute Echo command
 		Hello,	 //Excute Hello command
 		Ps,	 //Excute help command
+		History,//Excute History command
 		Help,	 //Excute ps command
 		CMD_NUM,
 		Wait ,//Wait command that be inserted
@@ -180,7 +184,8 @@ void Shell(void *pvParameters)
 		[Echo] = {.name = "echo ", .function = "Show words that you enter a moment ago.", .length = 5},
 		[Hello] = {.name = "hello ", .function = "Show words that you want to listen.", .length = 5},
 		[Ps] = {.name = "ps ", .function = "Show runing process.", .length = 2},
-		[Help] = {.name = "help ", .function = "Show commands that you can use.", .length = 4}
+		[History] = {.name = "history ", .function = "Show list latest command you enter.", .length = 7},		
+		[Help] = {.name = "help ", .function = "Show commands that you can use.", .length = 4},
 		};
 
 	while(1)
@@ -192,6 +197,11 @@ void Shell(void *pvParameters)
 
 					strprintf("JoyShell>>");
 					curr_ins =0;
+					
+					if(His_ins>=4)
+						His_ins = 0;
+					else
+						His_ins++;
 					
 					while(State==Wait)
 					{
@@ -214,11 +224,12 @@ void Shell(void *pvParameters)
 						else if(ch=='\r')//Enter
 							{
 							State=Check;
+							ins[His_ins][curr_ins++]='\0';
 							msg.str[curr_char++]='\0';
 							}
 						else//Universal word
 							{
-							ins[curr_ins++]=ch;
+							ins[His_ins][curr_ins++]=ch;
 							msg.str[curr_char++] = ch;
 							msg.str[curr_char++]='\0';
 							}
@@ -228,13 +239,22 @@ void Shell(void *pvParameters)
 				}break;
 			case Check:
 				{
-					int i,j,k;
+					int i=0,j=0,k=0,l=0;
+					
+					space_count = 0;
+					while(ins[His_ins][i]==' ')
+					{						
+						space_count++;
+						i++;
+					}
+
 					for(i = 0 ; i < CMD_NUM ; i++)
 					{
 						k=0;
+						l=space_count;
 						for(j = 0; j < cmd_data[i].length ; j++)
 						{
-							if( ins[j] == cmd_data[i].name[j] )
+							if( ins[His_ins][l] == cmd_data[i].name[j] )
 								k++;
 							
 							if( k >= cmd_data[i].length)
@@ -242,7 +262,7 @@ void Shell(void *pvParameters)
 								State=(i);
 								break;
 							}
-							
+							l++;	
 						}
 
 						if(State != Check)
@@ -257,13 +277,11 @@ void Shell(void *pvParameters)
 				{
 					curr_char = 0;
 					int i;
-					for( i=5 ; i < curr_ins ; i++)
-					{
-						msg.str[curr_char++] = ins[i];
-						msg.str[curr_char++]='\0';
-						strprintf(msg.str);
-						strprintf(next_line);
-					}
+					for( i = space_count+5 ; i < curr_ins ; i++)
+						msg.str[curr_char++] = ins[His_ins][i];
+					msg.str[curr_char++]='\0';
+					strprintf(msg.str);
+					strprintf(next_line);
 					State = Wait;
 				}break;
 			case Hello:
@@ -280,6 +298,30 @@ void Shell(void *pvParameters)
 						strprintf(cmd_data[i].name);
 						strprintf(cmd_data[i].function);
 						strprintf(next_line);
+					}
+					State = Wait;
+				}break;
+			case History:
+				{
+					int i = 0, j = 0;
+					curr_char = 0;
+
+					for ( i = His_ins+1 ; i <= His_ins+His_num ; i++)
+					{
+						if(ins[i%His_num][0])
+						{
+							curr_char = 0;
+							j = 0;						
+							while(ins[i%His_num][j] != '\0')
+							{
+								msg.str[curr_char++] = ins[i%His_num][j];
+								j++;
+							}
+						
+							msg.str[curr_char++] = '\0';
+							strprintf(msg.str);
+							strprintf(next_line);
+						}
 					}
 					State = Wait;
 				}break;
