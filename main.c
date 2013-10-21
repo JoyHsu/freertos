@@ -7,6 +7,7 @@
 #include "queue.h"
 #include "semphr.h"
 #include <string.h>
+#include <stdarg.h>
 
 /* Filesystem includes */
 #include "filesystem.h"
@@ -40,6 +41,7 @@ typedef struct {
 
 /* IRQ handler to handle USART2 interruptss (both transmit and receive
  * interrupts). */
+
 void USART2_IRQHandler()
 {
 	static signed portBASE_TYPE xHigherPriorityTaskWoken;
@@ -325,6 +327,14 @@ void Shell(void *pvParameters)
 					}
 					State = Wait;
 				}break;
+			case Ps:
+				{
+					portCHAR buf[100];    
+            				vTaskList(buf);
+            				strprintf("Name		State  Priority Stack  Num");
+					strprintf( buf ); 
+					State = Wait;
+				}break;	
 			case Error:
 				{
 					strprintf("No server");
