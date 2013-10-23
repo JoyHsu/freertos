@@ -166,6 +166,7 @@ void Shell(void *pvParameters)
 		Hello,	 //Excute Hello command
 		Ps,	 //Excute help command
 		History,//Excute History command
+		mmtest,//Excute mmtest command
 		Help,	 //Excute ps command
 		CMD_NUM,
 		Wait ,//Wait command that be inserted
@@ -186,7 +187,8 @@ void Shell(void *pvParameters)
 		[Echo] = {.name = "echo ", .function = "Show words that you enter a moment ago.", .length = 5},
 		[Hello] = {.name = "hello ", .function = "Show words that you want to listen.", .length = 5},
 		[Ps] = {.name = "ps ", .function = "Show runing process.", .length = 2},
-		[History] = {.name = "history ", .function = "Show list latest command you enter.", .length = 7},		
+		[History] = {.name = "history ", .function = "Show list latest command you enter.", .length = 7},
+		[mmtest] = {.name = "mmtest ", .function = "Test allocate memory.", .length = 6},		
 		[Help] = {.name = "help ", .function = "Show commands that you can use.", .length = 4},
 		};
 
@@ -335,6 +337,15 @@ void Shell(void *pvParameters)
 					strprintf( buf ); 
 					State = Wait;
 				}break;	
+			case mmtest:
+				{
+					int addre = (int *)pvPortMalloc(sizeof(char) * 1);
+					char addr_str[20];				
+					strprintf(itoa(addre,addr_str));
+					strprintf(next_line);
+					State = Wait;
+
+				}break;
 			case Error:
 				{
 					strprintf("No server");
