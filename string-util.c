@@ -11,6 +11,12 @@
 #include "semphr.h"
 
 
+/* Base */
+#define Base_2 2
+#define Base_8 8
+#define Base_10 10
+#define Base_16 16
+
 #define ALIGN (sizeof(size_t))
 #define ONES ((size_t)-1/UCHAR_MAX)                                                                      
 #define HIGHS (ONES * (UCHAR_MAX/2+1))
@@ -246,3 +252,56 @@ int sprintf(char *str, const char *format, ...)
 
     return rval;
 }
+
+char *itoa(int integral,int base,char *string)
+{
+	int i=0;
+     	int digit= 1;
+
+     switch(base)
+	{
+	case Base_2:{
+		string[i++]='0';
+		string[i++]='b';
+		}break;
+	case Base_8:{
+		string[i++]='0';
+		string[i++]='o';
+		}break;
+	case Base_10:
+		{
+		string[i++]='#';		
+		}break;
+	case Base_16:{
+		string[i++]='0';
+		string[i++]='x';		
+		}break;
+	default:{
+		string[i++]='e';
+		string[i++]='r';
+		string[i++]='r';
+		string[i++]='o';
+		string[i++]='r';
+		string[i] = '\0';
+		return string;
+		}break;
+	}
+	
+
+     while( integral >= (digit*base))
+          digit*=base;
+     
+     while( digit >= 1 )
+     {     
+           if( (integral/(digit)) < 10 )
+	   	string[i++] = (integral/(digit)) + '0';
+           else
+		string[i++] = (integral/(digit)) + 'A';
+	   integral = integral % digit;
+           digit/=base;
+     }
+           string[i] = '\0';
+
+     return string;
+}
+
