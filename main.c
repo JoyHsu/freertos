@@ -20,6 +20,12 @@
 #define BACKSPACE 127
 #define His_num 5
 
+/* Base*/
+#define Base_2 2
+#define Base_8 8
+#define Base_10 10
+#define Base_16 16
+
 extern const char _sromfs;
 
 static void setup_hardware();
@@ -339,12 +345,13 @@ void Shell(void *pvParameters)
 				}break;	
 			case mmtest:
 				{
-					int addre = (int *)pvPortMalloc(sizeof(char) * 1);
-					char addr_str[20];				
-					strprintf(itoa(addre,addr_str));
-					strprintf(next_line);
+					int x =10;
+					char *addre = ( char * ) pvPortMalloc(sizeof(char) * 1);
+					strprintf( itoa(addre,x));
+					strprintf(next_line); 
+					vPortFree(addre);
 					State = Wait;
-
+		
 				}break;
 			case Error:
 				{
