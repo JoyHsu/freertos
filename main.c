@@ -21,7 +21,10 @@
 #define His_num 5
 
 /* Base*/
+<<<<<<< HEAD
 #define Max_itoa 30
+=======
+>>>>>>> 4efe06a0d1b866fff6debfed8b075e538884cf67
 #define Base_2 2
 #define Base_8 8
 #define Base_10 10
@@ -346,10 +349,16 @@ void Shell(void *pvParameters)
 				}break;	
 			case mmtest:
 				{
+<<<<<<< HEAD
 					
 					char string[Max_itoa];
 					char *addre = ( char * ) pvPortMalloc(sizeof(char) * 1);
 					strprintf( itoa(addre,Base_10,string) );
+=======
+					int x =10;
+					char *addre = ( char * ) pvPortMalloc(sizeof(char) * 1);
+					strprintf( itoa(addre,x));
+>>>>>>> 4efe06a0d1b866fff6debfed8b075e538884cf67
 					strprintf(next_line); 
 					vPortFree(addre);
 					State = Wait;

@@ -12,6 +12,10 @@
 
 
 /* Base */
+<<<<<<< HEAD
+=======
+#define Max_itoa 20
+>>>>>>> 4efe06a0d1b866fff6debfed8b075e538884cf67
 #define Base_2 2
 #define Base_8 8
 #define Base_10 10
@@ -253,10 +257,19 @@ int sprintf(char *str, const char *format, ...)
     return rval;
 }
 
+<<<<<<< HEAD
 char *itoa(int integral,int base,char *string)
 {
 	int i=0;
      	int digit= 1;
+=======
+char *itoa(int integral,int base)
+{
+char string[20];     
+	int i=0;
+     int digit= 1;
+   
+>>>>>>> 4efe06a0d1b866fff6debfed8b075e538884cf67
 
      switch(base)
 	{
@@ -289,7 +302,11 @@ char *itoa(int integral,int base,char *string)
 	
 
      while( integral >= (digit*base))
+<<<<<<< HEAD
           digit*=base;
+=======
+          digit=digit*base;
+>>>>>>> 4efe06a0d1b866fff6debfed8b075e538884cf67
      
      while( digit >= 1 )
      {     
